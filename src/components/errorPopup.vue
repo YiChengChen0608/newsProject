@@ -28,7 +28,7 @@ export default {
     left: 50%;
     top: 0;
     transform: translate(-50%);
-    animation: down .5s linear forwards;
+    animation: down .5s linear forwards, up .5s 2s linear forwards ;
   }
   @keyframes down {
     from{
@@ -38,6 +38,16 @@ export default {
     to{
       top: 5%;
       opacity: 1;
+    }
+  }
+  @keyframes up {
+    from{
+      top: 5%;
+      opacity: 1;
+    }
+    to{
+      top: 0;
+      opacity: 0;
     }
   }
 </style>

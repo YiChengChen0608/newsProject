@@ -98,7 +98,7 @@ export default {
     }
   },
   created () {
-    // this.searchHandler()
+    this.searchHandler()
   },
   activated () {
     if (this.timer) clearTimeout(this.timer)
