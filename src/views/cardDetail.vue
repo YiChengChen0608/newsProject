@@ -15,6 +15,7 @@
 
 <script>
 export default {
+  name: 'CardDetail',
   data () {
     const Params = this.$route.params
     const LoaclCardDetail = JSON.parse(window.localStorage.getItem('CardDetail'))

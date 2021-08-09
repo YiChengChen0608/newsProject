@@ -11,7 +11,7 @@
       </div>
       <div class="content-footer">
         <div>PublishedAt: {{ getPublishedAt }}</div>
-        <div>Author: {{ author }}</div>
+        <div v-if="author">Author: {{ author }}</div>
       </div>
     </div>
 
@@ -27,7 +27,7 @@ export default {
   props: {
     author: {
       type: String,
-      required: true
+      default: ''
     },
     publishedAt: {
       type: String,
@@ -100,8 +100,15 @@ export default {
     }
     .content-footer {
       display: flex;
-      justify-content: space-between;
       padding-right: 16px;
+      text-align: left;
+      height: 20px;
+      div{
+        flex: 1;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
     }
   }
   .image-wrapper {

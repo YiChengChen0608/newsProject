@@ -13,103 +13,71 @@
           <img class="icon-image" src="../assets/img/loupe.svg" />
         </button>
       </div>
-      <div class="search-tool">
-        <button>Tool</button>
-      </div>
     </header>
-    <transition>
-      <div v-if="totalResult > 0" class="search-result">about {{ totalResult }} result</div>
-      <div class="tool-wrapper">
-        <select class="tool-sort">
-          <option hidden>Choose</option>
-          <option value="relevancy">relevancy</option>
-          <option value="popularity">popularity</option>
-          <option value="publishedAt">publishedAt</option>
-        </select>
-      </div>
-    </transition>
+    <!-- tool start -->
+    <Tool :totalResults="totalResults" :sortBy.sync="sortBy" :searchDate.sync="searchDate" />
+    <!-- tool stop -->
     <main>
-      <ul class="news-list">
+      <ul class="news-list" v-if="articles.length > 0">
         <li v-for="(article, index) of articles" :key="article.source.id + index">
           <NewsCard v-bind="article" />
         </li>
       </ul>
     </main>
-    <footer v-if="canShowPageNumber > 0" class="footer">
-      <button v-show="page !== 1" @click="page -= 1">＜</button>
-      <ul class="page-container">
-        <template v-for="number of canShowPageNumber">
-          <li
-            v-if="
-              number > (pageRound - 1) * isShowPage &&
-              number <= pageRound * isShowPage
-            "
-            :key="number"
-            :class="{ 'text-blue': number !== page }"
-            @click="page = number"
-          >
-            {{ number }}
-          </li>
-        </template>
-      </ul>
-      <button v-show="page !== pageNumber" @click="page += 1">＞</button>
-    </footer>
+    <Pagination v-if="totalResults > 0" :pageSize="pageSize" :isShowPage="isShowPage" :searchHandler="searchHandler" />
   </div>
 </template>
 
 <script>
-import { apiGetNewsList } from '../utils/api'
 import NewsCard from '../components/newsCard'
+import Pagination from '../components/pagination'
+import Tool from '../components/tool'
+import { mapState } from 'vuex'
 export default {
+  name: 'Index',
   components: {
-    NewsCard
+    NewsCard,
+    Pagination,
+    Tool
   },
   data () {
     return {
       searchNews: 'COVID-19',
-      articles: [],
-      totalResult: 0,
-      pageNumber: 0, // 總頁數
+      searchDate: [],
+      sortBy: '',
       pageSize: 20, // 幾筆數量
-      page: 1, // 當前頁數
-      isShowPage: 10, // 一次顯示幾頁
-      pageRound: 1 // 頁數幾輪 ex: 1-10 第一輪 11-20 第二輪
-
+      isShowPage: 5 // 一次顯示幾個頁碼
     }
   },
   computed: {
-    canShowPageNumber () {
-      let numberPage = 0
-      if (!this.pageNumber) return numberPage
-      numberPage = this.pageRound * this.isShowPage
-      numberPage = numberPage > this.pageNumber ? this.pageNumber : numberPage
-      return numberPage
-    }
-  },
-  watch: {
-    page: {
-      handler (val) {
-        if (val % this.isShowPage === 1 && val > this.canShowPageNumber) { this.pageRound++ }
-        if (val % this.isShowPage === 0 && val < this.canShowPageNumber) { this.pageRound-- }
-        // this.searchHandler(val)
-      }
-    }
+    ...mapState(['articles', 'totalResults'])
   },
   methods: {
     async searchHandler (page = 1) {
-      this.page = page
       const params = {
         q: this.searchNews,
         pageSize: this.pageSize,
         page
       }
-      const newsList = await apiGetNewsList(params)
-      this.articles = newsList.data.articles
-      this.totalResult = newsList.data.totalResults
-      this.pageNumber = Math.ceil(this.totalResult / this.pageSize)
+      if (this.sortBy) params.sortBy = this.sortBy
+      if (this.searchDate.length > 0) {
+        params.from = this.searchDate[0]
+        params.to = this.searchDate[1]
+      }
+      const result = await this.$store.dispatch('getArticles', params)
+      if (result.err) {
+        console.log(result.err)
+      }
+    },
+    clearToolValue () {
+      this.searchDate = []
+      this.sortBy = ''
     }
   },
   created () {
+    this.searchHandler()
+  },
+  activated () {
     window.localStorage.removeItem('CardDetail')
   }
 }
@@ -118,12 +86,6 @@ export default {
 <style lang="scss">
 .header {
   text-align: center;
-  border-bottom: 1px solid #dbdbdb;
-  .search-tool{
-    width: 60%;
-    margin: 16px auto;
-    text-align: right;
-  }
   .search-container {
     display: flex;
     width: 60%;
@@ -189,22 +151,57 @@ export default {
     }
   }
 }
-.search-result{
-  width: 60%;
-  margin: 8px auto;
-  color: rgb(150, 150, 150);
-}
-.tool-wrapper{
-  width: 60%;
-  margin: 8px auto;
-  select{
-    background: transparent;
-    border: 0;
-    &:focus{
-      outline: 0;
+.search-tool{
+    width: 60%;
+    margin: 16px auto;
+    text-align: right;
+    border-bottom: 1px solid #dbdbdb;
+    padding: 8px 0;
+    button{
+      cursor: pointer;
+      box-shadow: 0 2px 5px 1px rgb(199, 199, 199);
+    }
+    .tool-btn{
+      border-color: transparent;
+      background-color: transparent;
+      box-shadow: none;
+      &:focus{
+        outline: none;
+      }
     }
   }
-}
+.search-result{
+    width: 60%;
+    margin: 8px auto;
+    height: 40px;
+    line-height: 40px;
+    color: rgb(150, 150, 150);
+  }
+  .tool-wrapper{
+    display: flex;
+    width: 60%;
+    height: 40px;
+    margin: 8px auto;
+    .tool-sort{
+      margin-right: 16px;
+    }
+    button{
+      margin-left: 16px;
+      cursor: pointer;
+      border: transparent;
+      background-color: transparent;
+      height: 100%;
+      &:hover{
+        opacity: .5;
+      }
+      &:focus{
+        outline: none;
+      }
+      &:active{
+        transform: scale(.9);
+      }
+    }
+  }
 .news-list {
   list-style: none;
   text-align: center;
@@ -213,33 +210,16 @@ export default {
     margin: 8px;
   }
 }
-.footer {
-  display: flex;
-  justify-content: center;
-  .page-container {
-    list-style: none;
-    padding-left: 0;
-    display: flex;
-    justify-content: center;
-    margin: 0;
-    li {
-      padding: 8px;
-    }
-  }
-  button {
-    background-color: transparent;
-    border: 0;
-    cursor: pointer;
-    &:focus {
-      outline: transparent;
-    }
-    &:active {
-      color: blue;
-    }
-  }
-}
+
 .text-blue {
   color: rgb(142, 142, 250);
   cursor: pointer;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .3s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
 }
 </style>
