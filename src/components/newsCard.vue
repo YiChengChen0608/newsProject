@@ -5,9 +5,7 @@
         <h2>
           {{ title }}
         </h2>
-        <p>
-          {{ description }}
-        </p>
+        <p v-html="description"></p>
       </div>
       <div class="content-footer">
         <div>PublishedAt: {{ getPublishedAt }}</div>
@@ -15,7 +13,7 @@
       </div>
     </div>
 
-    <div class="image-wrapper">
+    <div class="image-wrapper" v-if="urlToImage">
       <img :src="urlToImage" />
     </div>
   </div>
@@ -35,7 +33,7 @@ export default {
     },
     urlToImage: {
       type: String,
-      required: true
+      default: ''
     },
     description: {
       type: String,

@@ -26,6 +26,7 @@
     </main>
     <Pagination v-if="totalResults > 0" :pageSize="pageSize" :isShowPage="isShowPage" :searchHandler="searchHandler" />
     <Loading v-show="loading" />
+    <ErrorPopup v-if="errorMessageShow" :message="errorMessage" />
   </div>
 </template>
 
@@ -33,6 +34,7 @@
 import NewsCard from '../components/newsCard'
 import Pagination from '../components/pagination'
 import Loading from '../components/loading'
+import ErrorPopup from '../components/errorPopup'
 import Tool from '../components/tool'
 import { mapState } from 'vuex'
 export default {
@@ -41,7 +43,8 @@ export default {
     NewsCard,
     Pagination,
     Tool,
-    Loading
+    Loading,
+    ErrorPopup
   },
   data () {
     return {
@@ -50,7 +53,10 @@ export default {
       searchDate: [],
       sortBy: '',
       pageSize: 20, // 幾筆數量
-      isShowPage: 5 // 一次顯示幾個頁碼
+      isShowPage: 5, // 一次顯示幾個頁碼
+      errorMessageShow: false,
+      errorMessage: '', // 錯誤訊息
+      timer: 0 // setTimeout 時間
     }
   },
   computed: {
@@ -72,7 +78,18 @@ export default {
       const result = await this.$store.dispatch('getArticles', params)
       this.loading = false
       if (result.err) {
-        console.log(result.err)
+        this.errorMessageShow = true
+        switch (result.err.type) {
+          case 'status':
+            this.errorMessage = `${result.err.type}: ${result.err.StatusCode} ${result.err.Message}`
+            break
+          case 'error':
+            this.errorMessage = `${result.err.type}: ${result.err.Message}`
+        }
+        if (this.timer) clearTimeout(this.timer)
+        this.timer = setTimeout(() => {
+          this.errorMessageShow = false
+        }, 3000)
       }
     },
     clearToolValue () {
@@ -84,6 +101,7 @@ export default {
     // this.searchHandler()
   },
   activated () {
+    if (this.timer) clearTimeout(this.timer)
     window.localStorage.removeItem('CardDetail')
   }
 }

@@ -70,6 +70,7 @@ export default {
 .footer {
   display: flex;
   justify-content: center;
+  margin-bottom: 16px;
   .page-container {
     list-style: none;
     padding-left: 0;

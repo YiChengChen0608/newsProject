@@ -13,7 +13,7 @@ searchNewsRequest.interceptors.response.use((response) => {
   if (error.response) {
     return {
       err: {
-        type: 'Status',
+        type: 'status',
         StatusCode: error.response.status,
         Message: error.response.data.message
       }

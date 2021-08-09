@@ -35,7 +35,7 @@ export default new Vuex.Store({
         return {
           err: {
             type: 'error',
-            message: error.message
+            Message: error.message
           }
         }
       }
