@@ -1,5 +1,5 @@
 <template>
-  <div class="card-wrapper">
+  <div class="card-wrapper" @click="showNewsDetail">
     <div class="card-content">
       <div class="content-main">
         <h2>
@@ -10,7 +10,7 @@
         </p>
       </div>
       <div class="content-footer">
-        <div>PublishedAt: {{ time }}</div>
+        <div>PublishedAt: {{ getPublishedAt }}</div>
         <div>Author: {{ author }}</div>
       </div>
     </div>
@@ -26,7 +26,7 @@ import moment from 'moment'
 export default {
   props: {
     author: {
-      type: Number,
+      type: String,
       required: true
     },
     publishedAt: {
@@ -44,11 +44,33 @@ export default {
     title: {
       type: String,
       required: true
+    },
+    content: {
+      type: String,
+      required: true
+    },
+    source: {
+      type: Object,
+      required: true
     }
   },
-  data () {
-    return {
-      time: moment('2021-08-06T17:00:00Z').format('YYYY-MM-DD HH:mm:ss')
+  computed: {
+    getPublishedAt () {
+      return moment(this.publishedAt).format('YYYY-MM-DD HH:mm:ss')
+    }
+  },
+  methods: {
+    showNewsDetail () {
+      const params = {
+        author: this.author,
+        publishedAt: this.getPublishedAt,
+        urlToImage: this.urlToImage,
+        title: this.title,
+        content: this.content,
+        sourceName: this.source.name
+      }
+      window.localStorage.setItem('CardDetail', JSON.stringify(params))
+      this.$router.push({ name: 'CardDetail', params })
     }
   }
 

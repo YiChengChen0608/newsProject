@@ -5,7 +5,7 @@
       <div class="search-container">
         <div class="input-wrapper">
           <input type="text" v-model="searchNews" />
-          <button>
+          <button v-if="searchNews" @click="searchNews = ''">
             <img class="icon-image" src="../assets/img/cancel.svg" />
           </button>
         </div>
@@ -13,10 +13,24 @@
           <img class="icon-image" src="../assets/img/loupe.svg" />
         </button>
       </div>
+      <div class="search-tool">
+        <button>Tool</button>
+      </div>
     </header>
+    <transition>
+      <div v-if="totalResult > 0" class="search-result">about {{ totalResult }} result</div>
+      <div class="tool-wrapper">
+        <select class="tool-sort">
+          <option hidden>Choose</option>
+          <option value="relevancy">relevancy</option>
+          <option value="popularity">popularity</option>
+          <option value="publishedAt">publishedAt</option>
+        </select>
+      </div>
+    </transition>
     <main>
       <ul class="news-list">
-        <li v-for="article of articles" :key="article.source.id">
+        <li v-for="(article, index) of articles" :key="article.source.id + index">
           <NewsCard v-bind="article" />
         </li>
       </ul>
@@ -54,7 +68,8 @@ export default {
     return {
       searchNews: 'COVID-19',
       articles: [],
-      pageNumber: 29, // 總頁數
+      totalResult: 0,
+      pageNumber: 0, // 總頁數
       pageSize: 20, // 幾筆數量
       page: 1, // 當前頁數
       isShowPage: 10, // 一次顯示幾頁
@@ -74,8 +89,8 @@ export default {
   watch: {
     page: {
       handler (val) {
-        if (val % this.isShowPage === 1 && val > this.canShowPageNumber) { this.pageRound += 1 }
-        if (val % this.isShowPage === 0 && val < this.canShowPageNumber) { this.pageRound -= 1 }
+        if (val % this.isShowPage === 1 && val > this.canShowPageNumber) { this.pageRound++ }
+        if (val % this.isShowPage === 0 && val < this.canShowPageNumber) { this.pageRound-- }
         // this.searchHandler(val)
       }
     }
@@ -90,13 +105,12 @@ export default {
       }
       const newsList = await apiGetNewsList(params)
       this.articles = newsList.data.articles
-      if (newsList.data.totalResults % this.pageSize === 0) {
-        this.pageNumber = newsList.data.totalResults / this.pageSize
-      } else {
-        this.pageNumber =
-          Math.trunc(newsList.data.totalResults / this.pageSize) + 1
-      }
+      this.totalResult = newsList.data.totalResults
+      this.pageNumber = Math.ceil(this.totalResult / this.pageSize)
     }
+  },
+  created () {
+    window.localStorage.removeItem('CardDetail')
   }
 }
 </script>
@@ -104,20 +118,38 @@ export default {
 <style lang="scss">
 .header {
   text-align: center;
+  border-bottom: 1px solid #dbdbdb;
+  .search-tool{
+    width: 60%;
+    margin: 16px auto;
+    text-align: right;
+  }
   .search-container {
     display: flex;
     width: 60%;
     margin: 0 auto;
     border-radius: 10px;
     border: 1px solid #a5a5a5;
+    box-shadow: 0 2px 5px 1px rgb(199, 199, 199);
+    &:hover{
+      box-shadow: 0 2px 5px 1px rgb(150, 150, 150);
+    }
     > button {
-      width: 5%;
-      padding: 0 4px;
-      margin-right: 8px;
-      object-fit: cover;
+      width: 10%;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      &::before {
+        content: "";
+        display: block;
+        width: 1px;
+        background: #dbdbdb;
+        height: 100%;
+      }
       .icon-image {
-        width: 50%;
-        height: 50%;
+        width: 60%;
+        height: 60%;
+        margin: 0 auto;
       }
     }
     .input-wrapper {
@@ -130,26 +162,46 @@ export default {
         outline: none;
         padding-left: 8px;
         border: 0;
+        font-size: 1.25rem;
       }
       > button {
-        margin-left: 8px;
+        width: 10%;
+        padding: 0;
+        transition: transform .5s ease-out;
+        &:active{
+        transform: scale(.7);
+      }
         .icon-image {
           width: 12px;
           height: 12px;
         }
       }
-      &::after {
-        content: "";
-        display: inline-block;
-        width: 1px;
-        background: #dbdbdb;
-        height: 100%;
-        margin-left: 16px;
-      }
+
     }
     button {
       background-color: transparent;
       border: 0;
+      cursor: pointer;
+      &:focus{
+        outline: none;
+      }
+
+    }
+  }
+}
+.search-result{
+  width: 60%;
+  margin: 8px auto;
+  color: rgb(150, 150, 150);
+}
+.tool-wrapper{
+  width: 60%;
+  margin: 8px auto;
+  select{
+    background: transparent;
+    border: 0;
+    &:focus{
+      outline: 0;
     }
   }
 }
