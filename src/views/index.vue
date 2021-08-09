@@ -25,12 +25,14 @@
       </ul>
     </main>
     <Pagination v-if="totalResults > 0" :pageSize="pageSize" :isShowPage="isShowPage" :searchHandler="searchHandler" />
+    <Loading v-show="loading" />
   </div>
 </template>
 
 <script>
 import NewsCard from '../components/newsCard'
 import Pagination from '../components/pagination'
+import Loading from '../components/loading'
 import Tool from '../components/tool'
 import { mapState } from 'vuex'
 export default {
@@ -38,10 +40,12 @@ export default {
   components: {
     NewsCard,
     Pagination,
-    Tool
+    Tool,
+    Loading
   },
   data () {
     return {
+      loading: false,
       searchNews: 'COVID-19',
       searchDate: [],
       sortBy: '',
@@ -64,7 +68,9 @@ export default {
         params.from = this.searchDate[0]
         params.to = this.searchDate[1]
       }
+      this.loading = true
       const result = await this.$store.dispatch('getArticles', params)
+      this.loading = false
       if (result.err) {
         console.log(result.err)
       }
@@ -75,7 +81,7 @@ export default {
     }
   },
   created () {
-    this.searchHandler()
+    // this.searchHandler()
   },
   activated () {
     window.localStorage.removeItem('CardDetail')

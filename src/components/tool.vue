@@ -76,6 +76,7 @@ export default {
   },
   methods: {
     clearToolValue () {
+      this.datePicker = []
       this.$emit('update:sortBy', '')
       this.$emit('update:searchDate', [])
     },
